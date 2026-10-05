@@ -12,15 +12,19 @@ Requirements: Rust, Node 20+, and on Windows **Strawberry Perl** (OpenSSL is bui
 
 ```sh
 npm install
-npm run tauri dev       # run the app
+npm run tauri:dev       # run the app
 cd src-tauri && cargo test
-npm run tauri build     # installer
+npm run tauri:build     # installer
 ```
 
 ## Layout
 
+- `src-tauri/src/commands.rs`: Tauri commands, a thin layer over the modules
 - `src-tauri/src/devices.rs`: device list, Dev Mode key fetch, SSH connect
-- `src-tauri/src/apps.rs`: list / install / remove / launch via luna (`appInstallService/dev/install`)
-- `src-tauri/src/sync.rs`: folder watcher and sync engine (emits `sync://entries`)
-- `src-tauri/src/ipk.rs`, `version.rs`: `.ipk` control parsing, Debian version compare
-- `src/components/`: `SyncView`, `AppsView`, `DevicesView`
+- `src-tauri/src/apps.rs`: list, install, remove and launch apps
+- `src-tauri/src/sync.rs`: folder watcher and sync engine
+- `src-tauri/src/ipk.rs`, `version.rs`: read .ipk files, compare versions
+- `src/pages/`: one page per tab, built only from components
+- `src/components/`: reusable components by feature (`common`, `devices`, `apps`, `sync`)
+- `src/composables/`: shared logic (`useSync`, `useInstaller`, `useInstalledApps`, ...)
+- `src/lib/api.ts`: typed calls to the Rust commands

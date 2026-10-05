@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
-import { api, type DeviceInfo, type NewDevice } from "../api";
+import { devicesApi } from "@/lib/api";
+import type { DeviceInfo, NewDevice } from "@/types";
 
 export const useDevices = defineStore("devices", () => {
   const devices = ref<DeviceInfo[]>([]);
@@ -8,40 +9,45 @@ export const useDevices = defineStore("devices", () => {
   const loading = ref(false);
 
   const current = computed(() => devices.value.find((d) => d.name === selected.value) ?? null);
+  const names = computed(() => devices.value.map((d) => d.name));
+
+  function keepSelectionValid() {
+    if (devices.value.some((d) => d.name === selected.value)) return;
+    const fallback = devices.value.find((d) => d.default) ?? devices.value[0];
+    selected.value = fallback?.name ?? null;
+  }
 
   async function refresh() {
     loading.value = true;
     try {
-      devices.value = await api.listDevices();
-      if (!devices.value.some((d) => d.name === selected.value)) {
-        selected.value = (devices.value.find((d) => d.default) ?? devices.value[0])?.name ?? null;
-      }
+      devices.value = await devicesApi.list();
+      keepSelectionValid();
     } finally {
       loading.value = false;
     }
   }
 
   async function add(device: NewDevice) {
-    const added = await api.addDevice(device);
+    const added = await devicesApi.add(device);
     await refresh();
     selected.value = added.name;
   }
 
   async function update(original: string, device: NewDevice) {
-    const updated = await api.updateDevice(original, device);
+    const updated = await devicesApi.update(original, device);
     if (selected.value === original) selected.value = updated.name;
     await refresh();
   }
 
   async function remove(name: string) {
-    await api.removeDevice(name);
+    await devicesApi.remove(name);
     await refresh();
   }
 
   async function makeDefault(name: string) {
-    await api.setDefaultDevice(name);
+    await devicesApi.setDefault(name);
     await refresh();
   }
 
-  return { devices, selected, current, loading, refresh, add, update, remove, makeDefault };
+  return { devices, selected, current, names, loading, refresh, add, update, remove, makeDefault };
 });
